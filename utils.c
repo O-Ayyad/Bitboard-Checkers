@@ -3,6 +3,7 @@
 #include <windows.h>
 #endif
 
+#define PADDING 72 // spaces at start of each line
 void print_binary(uint32_t value) {
     for (int i = 31; i >= 0; i--) {
         printf("%d", (value >> i) & 1);
@@ -51,22 +52,21 @@ void print_bitboards(Game_Board* board) { //Print the binary value of the board
     print_binary(board->black_men);
     printf("\n\n\n");
 }
-void print_line(int width, int padding){
-    printf("%*s", padding, "");
+void print_line(int width){
+    printf("%*s", PADDING, "");
     for (int i = 0; i < (width*9)+8; i++) {
         putchar('-');
     } printf("\n");
 }
-void print_player_turn(Game_Board* board, int padding){
-    printf("%*s",  (padding*3)/2, "");
+void print_player_turn(Game_Board* board){
+    printf("%*s",  (PADDING*3)/2, "");
     int player = (board->current_turn % 2 == 0) ? 2 : 1; //If the current turn is even then its players 2 turn, otherwise its players 1's turn
     printf("Player %d's turn!\n\n\n", player);
 }
 void print_board(Game_Board* board){
     print_bitboards(board);
     //Print top bar
-    int padding = 72;// spaces at start of each line
-    print_player_turn(board, padding);
+    print_player_turn(board);
     int cell_width = 9;//width of each tile including separator
     int row_height = 3; //height of each tile
 
@@ -75,7 +75,7 @@ void print_board(Game_Board* board){
     char* letters = "ABCDEFGH";
 
     for(int r = 0; r < row_height; r++){
-        for(int pad = 0; pad < padding; pad++){
+        for(int pad = 0; pad < PADDING; pad++){
             *charp++ = ' ';
         }
         for(int c = 0; c < 8; c++){
@@ -93,7 +93,7 @@ void print_board(Game_Board* board){
     *charp = '\0';
     //Print the main board the peices
     printf("%s", char_buffer);
-    print_line(cell_width,padding);
+    print_line(cell_width);
     for (int i = 0; i<8;i++){
 
         char peice_buffer[512];
@@ -102,7 +102,7 @@ void print_board(Game_Board* board){
         char* nums = "87654321";
 
         for(int r = 0; r < row_height; r++){
-            for(int pad = 0; pad < padding; pad++){
+            for(int pad = 0; pad < PADDING; pad++){
                 *p++ = ' ';
             }
 
@@ -136,10 +136,48 @@ void print_board(Game_Board* board){
         }
         *p = '\0';
         printf("%s", peice_buffer);
-        print_line(cell_width,padding);
+        print_line(cell_width);
     }
-
     printf("%s", char_buffer);
+}
+/*  return >= 0   = Successful, read return value
+    return = -1  = save gamestate
+    return = -2  = exit game
+    return = -3  = string not formatted correctly
+    return = -4  = tile does not exists (h9, g4)
+    return = -5  = no peice on tile
+*/
+int vailidate_and_get_user_input(Game_Board* board, char* input){
+    if(strcasecmp(input, "save") == 0){
+        return -1;
+    }
+    if(strcasecmp(input, "exit") == 0){
+        return -2;
+    }
+    //Check for string not formatted
+    if (*(input+2) != '\0' ||
+        *input == '\0' ||
+        *(input+1) == '\0'){
+        return -3;
+    }
+    int first_is_char = 0;
+    char first = toupper((unsigned char)*input);
+
+    //TODO: Validiate 2 length string and convert to tile index
+
+    int index = (7 - board_row) * 4 + (board_col / 2);
+    if(get_piece(board, index)){
+
+    }
+}
+int get_user_input(Game_Board* board){
+    printf("Select tile (Examples: A1, b2, 4g, 7H), or type in SAVE to save the game state, or type in EXIT to leave without saving\n");
+    printf("Selection: ");
+    char line[5];
+    scanf(line, sizeof(line),stdin);
+
+
+    
 }
 void print_screen(Game_Board * board){
     clear_screen();
