@@ -73,7 +73,6 @@ void print_board(Game_Board* board){
     char char_buffer[512];
     char* charp = char_buffer;
     char* letters = "ABCDEFGH";
-    char* nums = "87654321";
 
     for(int r = 0; r < row_height; r++){
         for(int pad = 0; pad < padding; pad++){
@@ -100,12 +99,14 @@ void print_board(Game_Board* board){
         char peice_buffer[512];
         char* p = peice_buffer;
 
+        char* nums = "87654321";
+
         for(int r = 0; r < row_height; r++){
             for(int pad = 0; pad < padding; pad++){
                 *p++ = ' ';
             }
 
-            for(int c = 0; c < 8; c++){
+            for(int c = 0; c < 9; c++){
 
                 for(int s = 0; s < cell_width; s++){            
                     char ch = ' ';
@@ -113,17 +114,23 @@ void print_board(Game_Board* board){
                     int board_col = c;
                     int board_row = i;
                     int index = (7 - board_row) * 4 + (board_col / 2);
+                    
+                    int is_middle_of_cell = (s == cell_width / 2) && (r == row_height / 2);
+                    int is_edge_column = (c == 0)||(c==8);
+                    int is_dark_square = ((board_row + board_col) % 2 == 0);
 
-                    if( s == cell_width/2 && 
-                        r == (row_height/2) && 
-                        c != 0 &&
-                        (board_row + board_col) % 2 == 0 ){
-
-                        ch = get_piece(board, index);
+                    if (is_middle_of_cell) {
+                        if (is_edge_column) {
+                            ch = nums[i];
+                        } else if(is_dark_square){
+                            ch = get_piece(board, index);
+                        }
                     }
                     *p++ = ch;
                 }
-                *p++ = '|';
+                if(c!=8){
+                   *p++ = '|';
+                }
             }
             *p++ = '\n';
         }
