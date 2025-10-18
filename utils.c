@@ -91,13 +91,13 @@ void print_board(Game_Board* board){
         *charp++ = '\n';
     }
     *charp = '\0';
-    //Print the main board the peices
+    //Print the main board the pieces
     printf("%s", char_buffer);
     print_line(cell_width);
     for (int i = 0; i<8;i++){
 
-        char peice_buffer[512];
-        char* p = peice_buffer;
+        char piece_buffer[512];
+        char* p = piece_buffer;
 
         char* nums = "87654321";
 
@@ -135,7 +135,7 @@ void print_board(Game_Board* board){
             *p++ = '\n';
         }
         *p = '\0';
-        printf("%s", peice_buffer);
+        printf("%s", piece_buffer);
         print_line(cell_width);
     }
     printf("%s", char_buffer);
@@ -145,7 +145,7 @@ void print_board(Game_Board* board){
     return = -2  = exit game
     return = -3  = string not formatted correctly
     return = -4  = tile does not exists (h9, g4)
-    return = -5  = no peice on tile
+    return = -5  = no piece on tile
 */
 int vailidate_user_input(Game_Board* board, char* input){
     
@@ -193,6 +193,13 @@ int vailidate_user_input(Game_Board* board, char* input){
         return -5;
     }
 }
+/*  return >= 0   = Successful, read return value
+    return = -1  = save gamestate
+    return = -2  = exit game
+    return = -3  = string not formatted correctly
+    return = -4  = tile does not exists (h9, g4)
+    return = -5  = no piece on tile
+*/
 int get_user_input(Game_Board* board){
     printf("Select tile (Examples: A1, b2, 4g, 7H), or type in SAVE to save the game state, or type in EXIT to leave without saving\n");
     printf("Selection: ");

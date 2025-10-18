@@ -6,8 +6,8 @@
 #include <stdlib.h>
 
 typedef struct {
-    //Each distince peice lives on a 32 bit board
-    //Since white peices cannot hold a peice, there is no need to double the size of the struct in mem to hold empty tiles
+    //Each distince piece lives on a 32 bit board
+    //Since white piece cannot hold a piece, there is no need to double the size of the struct in mem to hold empty tiles
     //Bottom left is post 0 and top right is pos 31
     /*  
         [ ] [28] [ ] [29] [ ] [30] [ ] [31]
@@ -37,7 +37,7 @@ extern const uint32_t mask;
 
 
 //game_board.c
-void set_board(uint32_t* red_m, uint32_t* black_m);
+void set_new_board(uint32_t* red_m, uint32_t* black_m);
 void set_tile_to_piece(uint32_t* board, int position);
 void remove_piece_from_tile(uint32_t* board, int position);
 int is_piece_at(uint32_t board, int position);
