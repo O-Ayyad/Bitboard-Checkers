@@ -147,37 +147,59 @@ void print_board(Game_Board* board){
     return = -4  = tile does not exists (h9, g4)
     return = -5  = no peice on tile
 */
-int vailidate_and_get_user_input(Game_Board* board, char* input){
+int vailidate_user_input(Game_Board* board, char* input){
+    
     if(strcasecmp(input, "save") == 0){
         return -1;
     }
     if(strcasecmp(input, "exit") == 0){
         return -2;
     }
-    //Check for string not formatted
+    //Check for string not formatted to two chars
     if (*(input+2) != '\0' ||
         *input == '\0' ||
-        *(input+1) == '\0'){
+        *(input+1) == '\0'||
+        !input){
         return -3;
     }
-    int first_is_char = 0;
-    char first = toupper((unsigned char)*input);
-
-    //TODO: Validiate 2 length string and convert to tile index
-
-    int index = (7 - board_row) * 4 + (board_col / 2);
+    int int_first;
+    char first = toupper(input[0]);
+    char second = toupper(input[1]);
+    //Check if the first char is a number or character
+    if (strchr("12345678", first) && strchr("ABCDEFGH", second)) {
+        int_first = 1;
+    }
+    //letter then number
+    else if (strchr("ABCDEFGH", first) && strchr("12345678", second)) {
+        int_first = 0;
+    }
+    else {
+        return -4; // invalid input
+    }
+    int row;
+    int col;
+    if(int_first){
+        row = first - '0'-1; 
+        col = second - 'A';
+    }else{
+        row = second - '0'-1;
+        col = first - 'A';
+    }
+    //Just in case
+    int index = (7 - row) * 4 + (col / 2);
     if(get_piece(board, index)){
-
+        return index;
+    }else{
+        return -5;
     }
 }
 int get_user_input(Game_Board* board){
     printf("Select tile (Examples: A1, b2, 4g, 7H), or type in SAVE to save the game state, or type in EXIT to leave without saving\n");
     printf("Selection: ");
     char line[5];
-    scanf(line, sizeof(line),stdin);
-
-
-    
+    fgets(line, sizeof(line), stdin);
+    line[strcspn(line, "\n")] = 0;
+    return vailidate_user_input(board, line);
 }
 void print_screen(Game_Board * board){
     clear_screen();
