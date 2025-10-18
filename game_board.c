@@ -63,10 +63,10 @@ int check_win(Game_Board* board){
 
     //Check for any of black moves
     for (int i = 0; i < 32; i++) {
-        if (is_piece_at(rd_p, i)) { // Check if there is a piece first
+        if (is_piece_at(bk_p, i)) { // Check if there is a piece first
             int* moves = check_for_moves(board, i, 0);
             for (int j = 0; j < 40; j++) {  // different variable
-                if (moves[j] != 1) {
+                if (moves[j] != -1) {
                     any_black_moves++;
                     break; // We found a move, no need to check anymore
                 }
@@ -82,7 +82,7 @@ int check_win(Game_Board* board){
         if(is_piece_at(rd_p,i)){ //Check if there is a piece first
             int* moves = check_for_moves(board, i, 0);
             for(int j = 0; j<40;j++){
-                if(moves[j] != 1){
+                if(moves[j] != -1){
                     any_red_moves ++;
                     break; //We found a move no need to check anymore
                 }
@@ -106,12 +106,24 @@ int check_win(Game_Board* board){
     }
 }
 
+/*0 = empty, 1 = red man, 2 = red king, 3 = black man, 4 = black king*/
+int get_peice_type(Game_Board* board, int position){
+    uint32_t bit = mask << position;
+
+    if (board->red_men & bit) return 1;
+    else if (board->red_kings & bit) return  2;
+    else if (board->black_men & bit) return  3;
+    else if (board->black_kings & bit) return  4;
+}
+
 /*  Checks for all valid moves for a piece and returns an int of the tile index that a piece can go
     including forced takes and such
     
     If a forced take is possible then all other moves are removed and only the forced takes returned
 
-    Call this function again when piece was taken (returned_pointer[12] = 1)
+    Call this function again when piece was taken (returned_pointer[40] = 1)
+    When checking a move for a hypotheical piece, pass in for param_piece_type
+    0 = empty (returns empty list), 1 = red man, 2 = red king, 3 = black man, 4 = black king
 
     Returns an array where index
 
@@ -138,8 +150,7 @@ int check_win(Game_Board* board){
 
     ALWAYS FREE THE RETURN VALUE AFTER CALLING
 */
-
-int* check_for_moves(Game_Board* board, int position, int multiple_hops){
+int* check_for_moves(Game_Board* board, int position, int param_piece_type){
 
     int array_size = 41;
     int forced_move = 40;
@@ -175,14 +186,11 @@ int* check_for_moves(Game_Board* board, int position, int multiple_hops){
     uint32_t occupied_tiles = occupied_tiles_by_red | occupied_tiles_by_black;
 
     int piece_type = 0; // 0 = empty, 1 = red man, 2 = red king, 3 = black man, 4 = black king
-
-    uint32_t bit = mask << position;
-
-    if (board->red_men & bit) piece_type = 1;
-    else if (board->red_kings & bit) piece_type = 2;
-    else if (board->black_men & bit) piece_type = 3;
-    else if (board->black_kings & bit) piece_type = 4;
-
+    if(param_piece_type == 0){
+        piece_type = get_peice_type(board, position);
+    }else{
+        piece_type = param_piece_type;
+    }
 
     int top_left_offset,
         top_right_offset,
@@ -204,8 +212,6 @@ int* check_for_moves(Game_Board* board, int position, int multiple_hops){
         bottom_right_offset = -3;
     }
     switch(piece_type){
-
-
 
 
 
@@ -257,7 +263,7 @@ int* check_for_moves(Game_Board* board, int position, int multiple_hops){
             if (abs(tl_row - row) == 1 && tl >= 0 && tl < 32 && (occupied_tiles_by_black & (mask << tl))){ //Check if the top left top left tile is occupied by black               
                 //If this is true, then check the tile after the black tile and if it is empty then add that tile
                 if (tl_next_row - tl_row  == 1 && tl_next >= 0 && tl_next < 32 && !(occupied_tiles & (mask << tl_next))){
-                    moves[0] = tl_next;
+                    moves[5] = tl_next;
                     moves[forced_move] = 1;
                 }
             }
@@ -594,13 +600,4 @@ int* check_for_moves(Game_Board* board, int position, int multiple_hops){
         }        
     }
     return moves;
-}
-//Checks for any valid moves for a full board and returns:
-// 1 = there is a valid move
-// 0 = there is none so game over
-int any_vaild_moves(uint32_t pieces){
-    pieces >= 3;
-    for(int i; i<31;i++){
-        
-    }
 }
