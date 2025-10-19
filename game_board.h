@@ -8,7 +8,7 @@
 #include <string.h>
 
 typedef struct {
-    //Each distince piece lives on a 32 bit board
+    //Each distinct piece lives on a 32 bit board
     //Since white piece cannot hold a piece, there is no need to double the size of the struct in mem to hold empty tiles
     //Bottom left is post 0 and top right is pos 31
     /*  

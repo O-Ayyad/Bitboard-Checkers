@@ -124,6 +124,8 @@ void create_save_file(Game_Board* board, char* dir){
         fputc((board->black_kings >> i) & 1 ? '1' : '0', file);
     }
     fputc('\n', file);
+    
+    fprintf(file, "%d\n", board->current_turn);
     fclose(file);   
 }
 FILE* select_save_file(char** files, int file_amount){

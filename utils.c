@@ -200,8 +200,6 @@ int validate_user_input(Game_Board* board, char* input, int current_turn){
     int dark_square_in_row = col / 2;
     int index = row * 4 + dark_square_in_row;
     
-    printf("DEBUG: %c%d -> index %d\n", 'A' + col, row + 1, index);
-    
     uint32_t color_board = (player_turn == 1)
         ? (board->red_kings | board->red_men)
         : (board->black_kings | board->black_men);
@@ -288,7 +286,6 @@ int secondary_valid_user_input(Game_Board* board, char* input){
     int dark_square_in_row = col / 2;
     int index = row * 4 + dark_square_in_row;
     
-    printf("DEBUG: %c%d -> index %d\n", 'A' + col, row + 1, index);
     
     uint32_t full_board = board->black_kings | board->black_men | 
                           board->red_kings | board->red_men;

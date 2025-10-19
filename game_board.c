@@ -36,7 +36,7 @@ void take_peice(Game_Board* board, int start, int finish, int player_turn) {
     uint32_t* opponent_men;
     uint32_t* opponent_kings;
 
-    if (player_turn == 1) {
+    if (player_turn %2 == 1) {
         player_men = &board->red_men;
         player_kings = &board->red_kings;
         opponent_men = &board->black_men;
@@ -59,7 +59,7 @@ void take_peice(Game_Board* board, int start, int finish, int player_turn) {
     int start_row_parity = start_row % 2;
     
     int offset = finish - start;
-    int victim_position;
+    int victim_position = -1;
     if (start_row_parity == 0) { // Even row
         // top_left=3, top_right=4, bottom_left=-5, bottom_right=-4
         if (offset == 7) {
@@ -83,8 +83,10 @@ void take_peice(Game_Board* board, int start, int finish, int player_turn) {
         }
     }
 
-    remove_piece_from_tile(opponent_men, victim_position);
-    remove_piece_from_tile(opponent_kings, victim_position);
+    if (victim_position >= 0 && victim_position < 32) {
+        remove_piece_from_tile(opponent_men, victim_position);
+        remove_piece_from_tile(opponent_kings, victim_position);
+    }
 
     if (is_king) {
         set_tile_to_piece(player_kings, finish);
@@ -281,15 +283,14 @@ int* check_for_moves(Game_Board* board, int position, int param_piece_type){
                 (br_occ && abs(br_row - row) == 1 && br >= 0 && br < 32) ||
                 (bl_occ && abs(bl_row - row) == 1 && bl >= 0 && bl < 32)) {
 
-                moves[forced_move] = 1;
                 
                 //Top right occupied
                 if(tr_occ && abs(tr_row - row) == 1 && tr >= 0 && tr < 32){
                     int tr_next;
                     if(top_right_offset == 4){
-                        tr_next = tr + top_right_offset + 1;
+                        tr_next = tr + (top_right_offset + 1);
                     } else{
-                        tr_next = tr + top_right_offset -1;
+                        tr_next = tr + (top_right_offset -1);
                     }
                     int tr_next_row = tr_next/4;
                     if (abs(tr_next_row - tr_row) == 1 && tr_next >= 0 && tr_next < 32 && !(occupied_tiles & (mask << tr_next))){
@@ -315,9 +316,9 @@ int* check_for_moves(Game_Board* board, int position, int param_piece_type){
                 //Bottom right
                 if(br_occ){
                     int br_next;
-                    if(bottom_right_offset == -5){
+                    if(bottom_right_offset == -4){
                         br_next = br + (bottom_right_offset + 1);
-                    } else{ //-4
+                    } else{ //-3
                         br_next = br + (bottom_right_offset -1);
                     }
                     int br_next_row = br_next/4;
@@ -330,9 +331,9 @@ int* check_for_moves(Game_Board* board, int position, int param_piece_type){
                 //Bottom left
                 if(bl_occ){
                     int bl_next;
-                    if(bottom_left_offset == -4){
+                    if(bottom_left_offset == -5){
                         bl_next = bl + (bottom_left_offset + 1);
-                    } else{ //-3
+                    } else{ //-4
                         bl_next = bl + (bottom_left_offset -1);
                     }
                     int bl_next_row = bl_next/4;
@@ -348,9 +349,10 @@ int* check_for_moves(Game_Board* board, int position, int param_piece_type){
 
                 //Top right diagonals
                 int tr_idx = 8;
+                int tr_offset = top_right_offset;
                 for(int tr_pos = tr, tr_r = tr_row, curr_row = row;
                     tr_pos >= 0 && tr_pos < 32 && !(occupied_tiles & (mask << tr_pos)) && abs(tr_r - curr_row) == 1; 
-                    tr_pos += (top_right_offset == 4 ? top_right_offset + 1 : top_right_offset - 1), tr_idx++, curr_row = tr_r, tr_r = tr_pos / 4)
+                    tr_pos += (tr_offset = (tr_offset == 4 ? tr_offset + 1 :tr_offset - 1)), tr_idx++, curr_row = tr_r, tr_r = tr_pos / 4)
                 {
                     moves[tr_idx] = tr_pos;
                 }
@@ -358,18 +360,20 @@ int* check_for_moves(Game_Board* board, int position, int param_piece_type){
 
                 //Top left
                 int tl_idx = 16;
+                int tl_offset = top_left_offset;
                 for(int tl_pos = tl, tl_r = tl_row, curr_row = row; 
                     tl_pos >= 0 && tl_pos < 32 && !(occupied_tiles & (mask << tl_pos)) && abs(tl_r - curr_row) == 1; 
-                    tl_pos += (top_left_offset == 3 ? top_left_offset + 1 : top_left_offset - 1), tl_idx++,  curr_row = tl_r, tl_r = tl_pos / 4)
+                    tl_pos += (tl_offset = (tl_offset == 4 ? tl_offset - 1 :tl_offset + 1)), tl_idx++,  curr_row = tl_r, tl_r = tl_pos / 4)
                 {
                     moves[tl_idx] = tl_pos;
                 }
 
                 //Bottom right
                 int br_idx = 24;
+                int br_offset = bottom_right_offset;
                 for(int br_pos = br, br_r = br_row, curr_row = row; 
                     br_pos >= 0 && br_pos < 32 && !(occupied_tiles & (mask << br_pos)) && abs(br_r - curr_row) == 1; 
-                    br_pos += (bottom_right_offset == -4 ? bottom_right_offset + 1 : bottom_right_offset - 1), br_idx++, curr_row= br_r, br_r = br_pos / 4)  
+                    br_pos += (br_offset = (br_offset == -4 ? br_offset + 1 : br_offset - 1)), br_idx++, curr_row= br_r, br_r = br_pos / 4)  
                 {
                     moves[br_idx] = br_pos;
                 }
@@ -377,9 +381,10 @@ int* check_for_moves(Game_Board* board, int position, int param_piece_type){
                  
                 //Bottom left
                 int bl_idx = 32;
+                int bl_offset = bottom_left_offset;
                 for(int bl_pos = bl, bl_r = bl_row, curr_row = row;  
                     bl_pos >= 0 && bl_pos < 32 && !(occupied_tiles & (mask << bl_pos)) && abs(bl_r - curr_row) == 1; 
-                    bl_pos += (bottom_left_offset == -5 ? bottom_left_offset + 1 : bottom_left_offset - 1), bl_idx++, curr_row = bl_r, bl_r = bl_pos / 4)
+                    bl_pos += (bl_offset = (bl_offset == -4? bl_offset - 1 : bl_offset + 1)), bl_idx++, curr_row = bl_r, bl_r = bl_pos / 4)
                 {
                     moves[bl_idx] = bl_pos;
                 }
@@ -468,8 +473,6 @@ int* check_for_moves(Game_Board* board, int position, int param_piece_type){
                 (tl_occ && abs(tl_row - row) == 1 && tl >= 0 && tl < 32) ||
                 (br_occ && abs(br_row - row) == 1 && br >= 0 && br < 32) ||
                 (bl_occ && abs(bl_row - row) == 1 && bl >= 0 && bl < 32)) {
-
-                moves[forced_move] = 1;
                 
                 //Top right occupied
                 if(tr_occ && abs(tr_row - row) == 1 && tr >= 0 && tr < 32){
@@ -503,9 +506,9 @@ int* check_for_moves(Game_Board* board, int position, int param_piece_type){
                 //Bottom right
                 if(br_occ){
                     int br_next;
-                    if(bottom_right_offset == -5){
+                    if(bottom_right_offset == -4){
                         br_next = br + (bottom_right_offset + 1);
-                    } else{ //-4
+                    } else{ //-3
                         br_next = br + (bottom_right_offset -1);
                     }
                     int br_next_row = br_next/4;
@@ -518,9 +521,9 @@ int* check_for_moves(Game_Board* board, int position, int param_piece_type){
                 //Bottom left
                 if(bl_occ){
                     int bl_next;
-                    if(bottom_left_offset == -4){
+                    if(bottom_left_offset == -5){
                         bl_next = bl + (bottom_left_offset + 1);
-                    } else{ //-3
+                    } else{ //-4
                         bl_next = bl + (bottom_left_offset -1);
                     }
                     int bl_next_row = bl_next/4;
@@ -532,13 +535,14 @@ int* check_for_moves(Game_Board* board, int position, int param_piece_type){
             }
 
             //Calculate Diagonals
-            if(moves[forced_move]== 0){
+                        if(moves[forced_move]== 0){
 
                 //Top right diagonals
                 int tr_idx = 8;
+                int tr_offset = top_right_offset;
                 for(int tr_pos = tr, tr_r = tr_row, curr_row = row;
                     tr_pos >= 0 && tr_pos < 32 && !(occupied_tiles & (mask << tr_pos)) && abs(tr_r - curr_row) == 1; 
-                    tr_pos += (top_right_offset == 4 ? top_right_offset + 1 : top_right_offset - 1), tr_idx++, curr_row = tr_r, tr_r = tr_pos / 4)
+                    tr_pos += (tr_offset = (tr_offset == 4 ? tr_offset + 1 :tr_offset - 1)), tr_idx++, curr_row = tr_r, tr_r = tr_pos / 4)
                 {
                     moves[tr_idx] = tr_pos;
                 }
@@ -546,18 +550,20 @@ int* check_for_moves(Game_Board* board, int position, int param_piece_type){
 
                 //Top left
                 int tl_idx = 16;
+                int tl_offset = top_left_offset;
                 for(int tl_pos = tl, tl_r = tl_row, curr_row = row; 
                     tl_pos >= 0 && tl_pos < 32 && !(occupied_tiles & (mask << tl_pos)) && abs(tl_r - curr_row) == 1; 
-                    tl_pos += (top_left_offset == 3 ? top_left_offset + 1 : top_left_offset - 1), tl_idx++,  curr_row = tl_row, tl_r = tl_pos / 4)
+                    tl_pos += (tl_offset = (tl_offset == 4 ? tl_offset - 1 :tl_offset + 1)), tl_idx++,  curr_row = tl_r, tl_r = tl_pos / 4)
                 {
                     moves[tl_idx] = tl_pos;
                 }
 
                 //Bottom right
                 int br_idx = 24;
+                int br_offset = bottom_right_offset;
                 for(int br_pos = br, br_r = br_row, curr_row = row; 
                     br_pos >= 0 && br_pos < 32 && !(occupied_tiles & (mask << br_pos)) && abs(br_r - curr_row) == 1; 
-                    br_pos += (bottom_right_offset == -4 ? bottom_right_offset + 1 : bottom_right_offset - 1), br_idx++, curr_row= br_r, br_r = br_pos / 4)  
+                    br_pos += (br_offset = (br_offset == -4 ? br_offset + 1 : br_offset - 1)), br_idx++, curr_row= br_r, br_r = br_pos / 4)  
                 {
                     moves[br_idx] = br_pos;
                 }
@@ -565,9 +571,10 @@ int* check_for_moves(Game_Board* board, int position, int param_piece_type){
                  
                 //Bottom left
                 int bl_idx = 32;
+                int bl_offset = bottom_left_offset;
                 for(int bl_pos = bl, bl_r = bl_row, curr_row = row;  
                     bl_pos >= 0 && bl_pos < 32 && !(occupied_tiles & (mask << bl_pos)) && abs(bl_r - curr_row) == 1; 
-                    bl_pos += (bottom_left_offset == -5 ? bottom_left_offset + 1 : bottom_left_offset - 1), bl_idx++, curr_row = bl_r, bl_r = bl_pos / 4)
+                    bl_pos += (bl_offset = (bl_offset == -4? bl_offset - 1 : bl_offset + 1)), bl_idx++, curr_row = bl_r, bl_r = bl_pos / 4)
                 {
                     moves[bl_idx] = bl_pos;
                 }
@@ -590,61 +597,57 @@ int* check_for_moves(Game_Board* board, int position, int param_piece_type){
 /*
   1= Red Wins
   2= Black wins
-  3= Draw
   0= No win yet
 */
 int check_win(Game_Board* board){
     uint32_t bk_p = board->black_kings | board->black_men;
     uint32_t rd_p = board-> red_men | board->red_kings;
-    int any_black_moves = 0;
-    int any_red_moves = 0;
+    int turn =(board->current_turn % 2 == 1) ? 1 : 2; //1 = red 2 = black
+
 
     if (!bk_p) return 1; // Red wins
     if (!rd_p) return 2; // Black wins
 
     //Check for any of black moves
-    for (int i = 0; i < 32; i++) {
-        if (is_piece_at(bk_p, i)) { // Check if there is a piece first
-            int* moves = check_for_moves(board, i, 0);
-            for (int j = 0; j < 40; j++) {  // different variable
-                if (moves[j] != -1) {
-                    any_black_moves++;
-                    break; // We found a move, no need to check anymore
+    if(turn == 2){
+        int any_black_moves = 0;
+        for (int i = 0; i < 32; i++) {
+            if (is_piece_at(bk_p, i)) { // Check if there is a piece first
+                int* moves = check_for_moves(board, i, 0);
+                for (int j = 0; j < 40; j++) {  // different variable
+                    if (moves[j] != -1) {
+                        any_black_moves++;
+                        break; // We found a move, no need to check anymore
+                    }
                 }
-            }
-            free(moves);
-            if (any_black_moves) {
-                break;
+                free(moves);
             }
         }
+        if(!any_black_moves){ //Checked and no black moves on black's turn, this means red won
+            return 1;
+        }
     }
+
     //Check for any of red moves
-    for(int i = 0; i <32; i++){
-        if(is_piece_at(rd_p,i)){ //Check if there is a piece first
-            int* moves = check_for_moves(board, i, 0);
-            for(int j = 0; j<40;j++){
-                if(moves[j] != -1){
-                    any_red_moves ++;
-                    break; //We found a move no need to check anymore
+    if(turn ==1){        
+        int any_red_moves = 0;
+        for(int i = 0; i <32; i++){
+            if(is_piece_at(rd_p,i)){ //Check if there is a piece first
+                int* moves = check_for_moves(board, i, 0);
+                for(int j = 0; j<40;j++){
+                    if(moves[j] != -1){
+                        any_red_moves ++;
+                        break; //We found a move no need to check anymore
+                    }
+                }
+                free(moves);
                 }
             }
-            free(moves);
-            if(any_red_moves){
-                break;
-            }
-        }
+        if(!any_red_moves){ //Checked and no black moves on black's turn, this means red won
+            return 2;
+        }    
     }
-    if(!any_black_moves && !any_red_moves){//Both have no moves
-        return 3; //Draw
-    }
-    if(!any_red_moves){ //Red has no moves when black does, black wins
-        return 2;
-    }else if(!any_black_moves){ //Black has no moves when red does, red wins
-        return 1;
-    }else{
-        // Both have moves, game not finished
-        return 0;
-    }
+    return 0;
 }
 void enter_to_cont() {
     int c;
@@ -680,6 +683,23 @@ char* allowed_moves_to_string(int *moves) {
     }
 
     return buffer;
+}
+void check_for_promotion(Game_Board* board){
+    //Red promotion
+    for (int pos = 28; pos <= 31; pos++) {
+        if (is_piece_at(board->red_men, pos)) {
+            remove_piece_from_tile(&board->red_men, pos);
+            set_tile_to_piece(&board->red_kings, pos);
+        }
+    }
+
+    // black promotions
+    for (int pos = 0; pos <= 3; pos++) {
+        if (is_piece_at(board->black_men, pos)) {
+            remove_piece_from_tile(&board->black_men, pos);
+            set_tile_to_piece(&board->black_kings, pos);
+        }
+    } 
 }
 void turn(Game_Board* board){
     int to,from;
@@ -719,24 +739,24 @@ void turn(Game_Board* board){
             case -7:
                 print_text_padding();
                 // TODO: HANDLE INVALID INPUT
-                printf("invalid");
+                printf("Invalid Input");
                 enter_to_cont();
                 break;
             case -4:
                 print_text_padding();
                 // TODO: HANDLE TILE NOT EXISTS
-                printf("tile not exists");
+                printf("This tile does not exist or is a white tile.");
                 enter_to_cont();
                 break;
             case -5:
                 print_text_padding();
-                printf("tile empty");
+                printf("You have selected an empty tile");
                 enter_to_cont();
                 // TODO: HANDLE NO PIECE ON TILE
                 break;
             case -6:
                 print_text_padding();
-                printf("there is forced move");
+                printf("There is a piece to be taken...");               
                 enter_to_cont();
                 // TODO: HANDLE NO PIECE ON TILE
                 break;
@@ -829,32 +849,75 @@ void turn(Game_Board* board){
                 }else{
                     move_peice(mover_board,from,to);
                 }
+                //Check for double jumps
+                int has_capture = 0;
+                int double_start = to;
+                int double_second_input;
+                do{
+                    print_screen(board);
+                    int* next_moves = check_for_moves(board, double_start, piece_type);
+                    has_capture = next_moves[40];
+                    if(has_capture){
+                        char* double_coords = allowed_moves_to_string(next_moves);
+                        print_text_padding();
+                        printf("Double jump available at %s\n",double_coords);
+                        free(double_coords);
+                        print_text_padding();
+                        printf("Select tile to jump to: \n");
+                        double_second_input = second_get_user_input(board);
+                        if (double_second_input == -1){
+                            print_text_padding();
+                            printf("Invalid input");
+                            free(next_moves);
+                            continue;
+                        }
+                        if (double_second_input == -2){
+                            print_text_padding();
+                            printf("Destination tile is occupied");
+                            free(next_moves);
+                            continue;
+                        }
+                        int double_is_second_legal = 0;
+                        for (int i = 4; i < 8; i++) { //Check if its legal move
+                            if (next_moves[i] == double_second_input) {
+                                double_is_second_legal = 1;
+                                break;
+                            }
+                        }
+                        if(double_is_second_legal){
+                            take_peice(board,double_start,double_second_input,current_player);
+                            double_start = double_second_input;
+                        }
+                    }
+                    free(next_moves);
+                }while(has_capture!=0);
                 board->current_turn++;
                 end:
+                print_text_padding();
+                printf("Press enter to continue...");
                 enter_to_cont();
                 break;
         }
+        check_for_promotion(board);
         game_state = check_win(board);
     }
+    //Game is over
+
+    print_screen(board);
     if(game_state == 1){
+        printf("\n");
         for(int i = 0; i<11;i++){
-            print_padding();
+            printf("%*s",  (PADDING*3)/2, "");
             printf("PLAYER 1 WINS!!\n");
             
         }
         enter_to_cont();
     }
     if(game_state == 2){
+        printf("\n");
         for(int i = 0; i<11;i++){
-            print_padding();
+            printf("%*s",  (PADDING*3)/2, "");
             printf("PLAYER 2 WINS!!\n");
-        }
-        enter_to_cont();
-    }
-    if(game_state == 3){
-        for(int i = 0; i<5;i++){
-            print_padding();
-            printf("Game draw.\n");
         }
         enter_to_cont();
     }
