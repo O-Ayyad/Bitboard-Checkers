@@ -4,6 +4,8 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <ctype.h>
+#include <string.h>
 
 typedef struct {
     //Each distince piece lives on a 32 bit board
@@ -30,10 +32,13 @@ typedef struct {
     uint32_t red_kings;
     uint32_t black_men;
     uint32_t black_kings;
-    uint16_t current_turn;
+    int current_turn;
 } Game_Board;
 
 extern const uint32_t mask;
+
+extern const int PADDING; // spaces at start of each line
+extern const int TEXT_PADDING;
 
 
 //game_board.c
@@ -41,8 +46,10 @@ void set_new_board(uint32_t* red_m, uint32_t* black_m);
 void set_tile_to_piece(uint32_t* board, int position);
 void remove_piece_from_tile(uint32_t* board, int position);
 int is_piece_at(uint32_t board, int position);
+int get_peice_type(Game_Board* board, int position);
 
 void turn(Game_Board* board);
+int* check_for_moves(Game_Board* board, int pos, int param_piece_type);
 
 
 //utils.c
@@ -53,11 +60,15 @@ void print_bitboards(Game_Board* board);
 void print_binary(uint32_t value);
 void print_line(int width);
 void print_player_turn(Game_Board* board);
+void print_padding();
+void print_text_padding();
 void print_board(Game_Board* board);
 char get_piece(Game_Board* board, int bit);
 
-int vailidate_user_input(Game_Board* board, char* input);
+int validate_user_input(Game_Board* board, char* input, int current_turn);
 int get_user_input(Game_Board* board);
+int second_get_user_input(Game_Board* board);
+int secondary_valid_user_input(Game_Board* board, char* input);
 
 
 
