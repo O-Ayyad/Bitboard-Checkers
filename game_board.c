@@ -399,19 +399,19 @@ int* check_for_moves(Game_Board* board, int position, int param_piece_type){
             int br_next;
             //Swap parity for next row
             if(bottom_right_offset == -4){
+                br_next = br + (bottom_right_offset +1);
+            } else{ //B_R_offset = -3
                 br_next = br + (bottom_right_offset - 1);
-            } else{ //B_R_offset = -5
-                br_next = br + (bottom_right_offset + 1);
             }
             int br_next_row = br_next/4;
 
             //bottom left next
             int bl_next;
             //Swap parity for next row
-            if(bottom_left_offset == -3){
-                bl_next = bl + (bottom_left_offset - 1);
+            if(bottom_left_offset == -5){
+                bl_next = bl + (bottom_left_offset + 1);
             } else{ //B_L_offset = -4
-                bl_next = bl + (bottom_left_offset +1);
+                bl_next = bl + (bottom_left_offset -1);
             }
             int bl_next_row = bl_next/4;
             
@@ -683,22 +683,37 @@ char* allowed_moves_to_string(int *moves) {
 }
 void turn(Game_Board* board){
     int to,from;
-    while(check_win(board) == 0){
+    int game_state = check_win(board);
+    while(game_state == 0){
         print_screen(board);
         int input = get_user_input(board);
         printf("\n");
         switch(input){//Check for errors
             case -1:
+                char* dir = "saves";
                 print_text_padding();
-                //TODO: SAVE GAME
-                printf("game saved");
+                create_save_file(board, dir);
+                printf("Game saved!");
                 enter_to_cont();
                 break;
             case -2:
-                print_text_padding();
-                // TODO: EXIT GAME 
-                printf("game exit");
-                enter_to_cont();
+                char response[8];
+                int confirmed = 0;
+                while (!confirmed) {
+                    print_text_padding();
+                    printf("Are you sure you want to exit? Y/N: ");
+                    if (!fgets(response, sizeof(response), stdin)) continue;
+
+                    if (response[0] == 'Y' || response[0] == 'y') {
+                        print_text_padding();
+                        return; //Exit out of turn
+                    } else if (response[0] == 'N' || response[0] == 'n') {
+                        confirmed = 1;
+                    } else {
+                        print_text_padding();
+                        printf("Please enter Y or N.\n");
+                    }
+                }
                 break;
             case -3:
             case -7:
@@ -819,5 +834,28 @@ void turn(Game_Board* board){
                 enter_to_cont();
                 break;
         }
+        game_state = check_win(board);
+    }
+    if(game_state == 1){
+        for(int i = 0; i<11;i++){
+            print_padding();
+            printf("PLAYER 1 WINS!!\n");
+            
+        }
+        enter_to_cont();
+    }
+    if(game_state == 2){
+        for(int i = 0; i<11;i++){
+            print_padding();
+            printf("PLAYER 2 WINS!!\n");
+        }
+        enter_to_cont();
+    }
+    if(game_state == 3){
+        for(int i = 0; i<5;i++){
+            print_padding();
+            printf("Game draw.\n");
+        }
+        enter_to_cont();
     }
 }

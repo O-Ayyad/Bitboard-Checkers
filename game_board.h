@@ -40,6 +40,9 @@ extern const uint32_t mask;
 extern const int PADDING; // spaces at start of each line
 extern const int TEXT_PADDING;
 
+//main.c
+void create_save_file(Game_Board* board,char* dir);
+
 
 //game_board.c
 void set_new_board(uint32_t* red_m, uint32_t* black_m);
