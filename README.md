@@ -30,13 +30,13 @@ cd Bitboard-Checkers
 
 **Linux/macOS:**
 ```bash
-gcc main.c utils.c game_board.c -o game
+gcc main.c utils.c game_board.c -o BitBoard-Checkers
 ./game
 ```
 
 **Windows:**
 ```cmd
-gcc main.c utils.c game_board.c -o game.exe
+gcc main.c utils.c game_board.c -o BitBoard-Checkers.exe
 game.exe
 ```
 
