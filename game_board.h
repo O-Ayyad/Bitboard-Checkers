@@ -49,7 +49,7 @@ void set_new_board(uint32_t* red_m, uint32_t* black_m);
 void set_tile_to_piece(uint32_t* board, int position);
 void remove_piece_from_tile(uint32_t* board, int position);
 int is_piece_at(uint32_t board, int position);
-int get_peice_type(Game_Board* board, int position);
+int get_piece_type(Game_Board* board, int position);
 
 void turn(Game_Board* board);
 int* check_for_moves(Game_Board* board, int pos, int param_piece_type);

@@ -4,32 +4,44 @@ const uint32_t mask = 1u;
 
 //Sets the inital board in a standard checkers game
 void set_new_board( uint32_t* red_m, uint32_t* black_m){
-    *red_m = 0b111111111111;
-    *black_m = 0b111111111111<<20;
+    for(int i = 0; i < 12; i++){
+        *red_m |= (mask<<i);
+        *black_m |= (mask<<(31-i));
+    }
 }
 
-//Sets the tile of a board to a piece
+//Set bit
+//Sets the bit of a board to a piece
 void set_tile_to_piece(uint32_t* board, int position){ 
     if (position < 0 || position >= 32) return;
     *board |= (mask << position);
 }
 
+//Clear bit
+/// Removes bit from board
 void remove_piece_from_tile(uint32_t* board, int position){ //remove a piece from a tile
     if (position < 0 || position >= 32) return;
     *board &= ~(mask << position);
 }
+
+//Unused: toggles a bit from 0->1 or 1->0
+void toggle_bit(uint32_t* board, int position){
+    if (position < 0 || position >= 32) return;
+    *board ^= (mask<<position);
+}
 //Returns 1 if a piece exists on that board, 0 otherwise.
 int is_piece_at(uint32_t board, int position){
+    if (position < 0 || position >= 32) return 0;
     return ((board)) & (mask<<position);
 }
 
-void move_peice(uint32_t* board, int start, int finish){
+void move_piece(uint32_t* board, int start, int finish){
     remove_piece_from_tile(board, start);
     set_tile_to_piece(board, finish);
 }
 
 //1 for red 2 for black
-void take_peice(Game_Board* board, int start, int finish, int player_turn) {
+void take_piece(Game_Board* board, int start, int finish, int player_turn) {
     // player_turn: 1 = red, 2 = black
     uint32_t* player_men;
     uint32_t* player_kings;
@@ -96,7 +108,7 @@ void take_peice(Game_Board* board, int start, int finish, int player_turn) {
 }
 
 /*0 = empty, 1 = red man, 2 = red king, 3 = black man, 4 = black king*/
-int get_peice_type(Game_Board* board, int position){
+int get_piece_type(Game_Board* board, int position){
     uint32_t bit = mask << position;
 
     if (board->red_men & bit) return 1;
@@ -177,7 +189,7 @@ int* check_for_moves(Game_Board* board, int position, int param_piece_type){
 
     int piece_type = 0; // 0 = empty, 1 = red man, 2 = red king, 3 = black man, 4 = black king
     if(param_piece_type == 0){
-        piece_type = get_peice_type(board, position);
+        piece_type = get_piece_type(board, position);
     }else{
         piece_type = param_piece_type;
     }
@@ -654,6 +666,22 @@ void enter_to_cont() {
     while ((c = getchar()) != '\n' && c != EOF) {} // flush
     fflush(stdout);
 }
+char* index_to_tile(int index) {
+    if (index < 0 || index > 31) {  
+        return NULL;
+    }
+    char *notation = malloc(3 * sizeof(char)); 
+    if (!notation) return NULL;
+    
+    int row = (index / 4) + 1;  
+    int col_offset = (index % 4) * 2;
+    col_offset += (row % 2 == 0) ? 1 : 0; 
+    char col = 'A' + col_offset;
+    
+    sprintf(notation, "%c%d", col, row);
+    return notation;
+
+}
 char* allowed_moves_to_string(int *moves) {
     char *buffer = malloc(512);
     buffer[0] = '\0';
@@ -738,30 +766,25 @@ void turn(Game_Board* board){
             case -3:
             case -7:
                 print_text_padding();
-                // TODO: HANDLE INVALID INPUT
                 printf("Invalid Input");
                 enter_to_cont();
                 break;
             case -4:
                 print_text_padding();
-                // TODO: HANDLE TILE NOT EXISTS
                 printf("This tile does not exist or is a white tile.");
                 enter_to_cont();
                 break;
             case -5:
                 print_text_padding();
-                printf("You have selected an empty tile");
+                printf("You have selected an empty tile or a piece that is not yours.");
                 enter_to_cont();
-                // TODO: HANDLE NO PIECE ON TILE
                 break;
             case -6:
                 print_text_padding();
                 printf("There is a piece to be taken...");               
                 enter_to_cont();
-                // TODO: HANDLE NO PIECE ON TILE
                 break;
             default:
-                printf("index:%d\n",input);
                 int* allowed_moves = check_for_moves(board, input, 0);
                 int has_move = 0;
                 for (int i = 0; i < 40; i++) {
@@ -777,12 +800,15 @@ void turn(Game_Board* board){
                 }
                 printf("\n");
                 print_text_padding();
-                printf("You selected tile: %d\n", input);
+                char* tile = index_to_tile(input);
+                printf("You selected tile: %s\n", tile);
+                free(tile);
 
                 printf("\n");
                 print_text_padding();
                 char* coords = allowed_moves_to_string(allowed_moves);
                 printf("Allowed tiles: %s\n", coords);
+                free(coords);
 
                 printf("\n");
                 print_text_padding();
@@ -792,11 +818,13 @@ void turn(Game_Board* board){
                 if (second_input == -1){
                     print_text_padding();
                     printf("Invalid input");
+                    enter_to_cont();
                     goto end;
                 }
                 if (second_input == -2){
                     print_text_padding();
                     printf("Destination tile is occupied");
+                    enter_to_cont();
                     goto end;
                 }
                 int is_second_legal = 0;
@@ -810,12 +838,13 @@ void turn(Game_Board* board){
                     printf("\n");
                     print_text_padding();
                     printf("That is not a legal move.");
+                    enter_to_cont();
                     goto end;
                 }
                 from = input;
                 to = second_input;
                 int current_player = (board->current_turn % 2 == 1) ? 1 : 2;
-                int piece_type = get_peice_type(board, from);
+                int piece_type = get_piece_type(board, from);
                 uint32_t* mover_board = NULL;
                 switch (piece_type) {
                     case 1: // red man
@@ -842,60 +871,58 @@ void turn(Game_Board* board){
                 if (mover_board == NULL) {
                     print_text_padding();
                     printf("No valid piece selected (index %d)\n", to);
+                    enter_to_cont();
                     goto end;
                 }
                 if(allowed_moves[40] == 1 ){//This is a forced take
-                    take_peice(board,from,to,current_player);
-                }else{
-                    move_peice(mover_board,from,to);
-                }
-                //Check for double jumps
-                int has_capture = 0;
-                int double_start = to;
-                int double_second_input;
-                do{
-                    print_screen(board);
-                    int* next_moves = check_for_moves(board, double_start, piece_type);
-                    has_capture = next_moves[40];
-                    if(has_capture){
-                        char* double_coords = allowed_moves_to_string(next_moves);
-                        print_text_padding();
-                        printf("Double jump available at %s\n",double_coords);
-                        free(double_coords);
-                        print_text_padding();
-                        printf("Select tile to jump to: \n");
-                        double_second_input = second_get_user_input(board);
-                        if (double_second_input == -1){
+                    take_piece(board,from,to,current_player);
+                    //Check for double jumps
+                    int has_capture = 0;
+                    int double_start = to;
+                    int double_second_input;
+                    do{
+                        print_screen(board);
+                        int* next_moves = check_for_moves(board, double_start, piece_type);
+                        has_capture = next_moves[40];
+                        if(has_capture){
+                            char* double_coords = allowed_moves_to_string(next_moves);
                             print_text_padding();
-                            printf("Invalid input");
-                            free(next_moves);
-                            continue;
-                        }
-                        if (double_second_input == -2){
+                            printf("Double jump available at %s\n",double_coords);
+                            free(double_coords);
                             print_text_padding();
-                            printf("Destination tile is occupied");
-                            free(next_moves);
-                            continue;
-                        }
-                        int double_is_second_legal = 0;
-                        for (int i = 4; i < 8; i++) { //Check if its legal move
-                            if (next_moves[i] == double_second_input) {
-                                double_is_second_legal = 1;
-                                break;
+                            printf("Select tile to jump to: \n");
+                            double_second_input = second_get_user_input(board);
+                            if (double_second_input == -1){
+                                print_text_padding();
+                                printf("Invalid input");
+                                free(next_moves);
+                                continue;
+                            }
+                            if (double_second_input == -2){
+                                print_text_padding();
+                                printf("Destination tile is occupied");
+                                free(next_moves);
+                                continue;
+                            }
+                            int double_is_second_legal = 0;
+                            for (int i = 4; i < 8; i++) { //Check if its legal move
+                                if (next_moves[i] == double_second_input) {
+                                    double_is_second_legal = 1;
+                                    break;
+                                }
+                            }
+                            if(double_is_second_legal){
+                                take_piece(board,double_start,double_second_input,current_player);
+                                double_start = double_second_input;
                             }
                         }
-                        if(double_is_second_legal){
-                            take_peice(board,double_start,double_second_input,current_player);
-                            double_start = double_second_input;
-                        }
-                    }
-                    free(next_moves);
-                }while(has_capture!=0);
+                        free(next_moves);
+                    }while(has_capture!=0);
+                }else{ //Not a forced take just move piece
+                    move_piece(mover_board,from,to);
+                }
                 board->current_turn++;
-                end:
-                print_text_padding();
-                printf("Press enter to continue...");
-                enter_to_cont();
+                end:                
                 break;
         }
         check_for_promotion(board);

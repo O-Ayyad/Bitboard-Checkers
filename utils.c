@@ -55,9 +55,10 @@ void print_line(int width){
     } printf("\n");
 }
 void print_player_turn(Game_Board* board){
-    printf("%*s",  (PADDING*3)/2, "");
+    printf("%*s",  ((PADDING*3)/2)-4, "");
     int player = (board->current_turn % 2 == 0) ? 2 : 1; //If the current turn is even then its players 2 turn, otherwise its players 1's turn
-    printf("Player %d's turn!\n\n\n", player);
+    char* color[2] = {"Red", "Black"};
+    printf("Player %d's (%s) turn!\n\n\n", player, color[player - 1]);
 }
 
 void print_column_labels(int cell_width, int row_height) {
@@ -211,7 +212,7 @@ int validate_user_input(Game_Board* board, char* input, int current_turn){
     int forced_pieces[32];
     int forced_count = 0;
     for (int pos = 0; pos < 32; pos++) {
-        int piece_type = get_peice_type(board, pos);
+        int piece_type = get_piece_type(board, pos);
         //Skip empty squares or opponent pieces
         if (piece_type == 0){
             continue;

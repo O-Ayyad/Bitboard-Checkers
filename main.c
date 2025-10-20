@@ -21,6 +21,7 @@ char **list_save_files(int *num_files, char* dir) {
     int count = 0;
     char **files = malloc(capacity * sizeof(char *));
 
+
 #ifdef _WIN32
     WIN32_FIND_DATA findFileData;
     char search_path[260];
@@ -124,7 +125,7 @@ void create_save_file(Game_Board* board, char* dir){
         fputc((board->black_kings >> i) & 1 ? '1' : '0', file);
     }
     fputc('\n', file);
-    
+
     fprintf(file, "%d\n", board->current_turn);
     fclose(file);   
 }
@@ -217,19 +218,20 @@ int main(){
     if (file_amount == 0) {
         start_new_game(&board);
     } else {
-        FILE *selected_file = select_save_file(files, file_amount);
-        //Free file name char*
-        for (int i = 0; i < file_amount; i++){
-            free(files[i]);
-        } 
-        free(files);
+            FILE *selected_file = select_save_file(files, file_amount);
+            //Free file name char*
+            for (int i = 0; i < file_amount; i++){
+                free(files[i]);
+            } 
+            free(files);
 
-        if (selected_file){
-            load_save_file(selected_file, &board);
-        }else{
-            start_new_game(&board);
+            if (selected_file){
+                load_save_file(selected_file, &board);
+                fclose(selected_file);
+            }else{
+                start_new_game(&board);
+            }
         }
-    }
-            turn(&board);
+        turn(&board);
     return 0;
 }
