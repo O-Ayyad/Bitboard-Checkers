@@ -40,6 +40,11 @@ gcc main.c utils.c game_board.c -o game.exe
 game.exe
 ```
 
+**Make:**
+```bash
+make run
+````
+
 ## How to Play
 
 ### Game Controls
